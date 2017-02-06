@@ -1,0 +1,42 @@
+---
+title: "InterRaterAgreementReproducibility"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#library(irr)
+library(psych)
+```
+## Purpose
+
+This calculates kappa between an expert and a non-expert for rating availability of code and data for the 28 papers published in BioNLP 2016.
+I've done two versions: with different numbers of categories for the two raters ("Yes" and "No" for the expert, versus "Yes", "No", and "Maybe" for the non-expert), and with identical numbers of categories for the two raters.  In the later case, I added the "Maybe" category for the expert, and left those cells empty.
+When I calculated Kappa with different numbers of categories, the results made no sense at all, so I'm reporting only the numbers for the same number of categories (i.e., where I added an empty column for "Maybe" for the expert).
+
+
+## Data
+
+See the file XX at XX.github.xx.
+
+```{r data}
+
+code.different.categories <- as.data.frame(rbind(c(9, 1), c(0, 13), c(3, 2)))
+code.same.categories <-      as.data.frame(rbind(c(9, 1, 0), c(0, 13, 0), c(3, 2, 0)))
+
+data.different.categories <- as.data.frame(rbind(c(15, 3), c(1, 7), c(1, 1)))
+data.same.categories <- as.data.frame(rbind(c(15, 3, 0), c(1, 7, 0), c(1, 1, 0)))
+```
+
+## 
+
+
+
+```{r calculate.kappa}
+# Cohen's kappa for two raters
+cohen.kappa(code.different.categories)
+cohen.kappa(code.same.categories)
+cohen.kappa(data.different.categories)
+cohen.kappa(data.same.categories)
+```
+
