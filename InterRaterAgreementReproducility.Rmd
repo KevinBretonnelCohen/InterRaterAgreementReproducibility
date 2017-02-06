@@ -189,7 +189,23 @@ mean.accuracy <- round(mean.accuracy, digits=2)
 standard.deviation.accuracy <- sd(pairwise.accuracies)
 standard.deviation.accuracy <- round(standard.deviation.accuracy, digits=2)
 #table.main.title <- paste("Kappa and percent agreement for all pairs of annotators\n Kappa mean ", mean.kappa, "standard deviation ", standard.deviation.kappa, "Percent agreement mean ", mean.accuracy, "standard deviation ", standard.deviation.accuracy)
+time.and.date <- paste(Sys.time(), Sys.Date())
+file.name <- paste("/Users/kev/Documents/InterRaterAgreementReproducibility/kappa-and-percent-agreement", time.and.date, ".jpg", sep="")
+print("Figure name:")
+print(file.name)
+
+jpeg(file.name)
 table.main.title <- paste("Kappa and percent agreement for all pairs of annotators")
+plot(pairwise.accuracies, pairwise.kappas,
+     main=table.main.title,
+     xlim=c(0, 1.0),
+     xlab="Percent agreement",
+     ylim=c(0, 1.0),
+     ylab="Kappa"
+     )
+dev.off()
+
+# Repeat the printing, but not to a file--I want it to show up in the markdown
 plot(pairwise.accuracies, pairwise.kappas,
      main=table.main.title,
      xlim=c(0, 1.0),
