@@ -6,7 +6,8 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 #library(irr)
-library(psych)
+library(psych) # for Kappa
+library(caret) # for confusion matrix
 ```
 ## Purpose
 
@@ -19,7 +20,7 @@ When I calculated Kappa with different numbers of categories, the results made n
 
 See the file XX at XX.github.xx.
 
-```{r data}
+```{r data.bionlp2016}
 
 code.different.categories <- as.data.frame(rbind(c(9, 1), c(0, 13), c(3, 2)))
 code.same.categories <-      as.data.frame(rbind(c(9, 1, 0), c(0, 13, 0), c(3, 2, 0)))
@@ -32,11 +33,194 @@ data.same.categories <- as.data.frame(rbind(c(15, 3, 0), c(1, 7, 0), c(1, 1, 0))
 
 
 
-```{r calculate.kappa}
+```{r calculate.kappa.bionlp2016}
 # Cohen's kappa for two raters
 cohen.kappa(code.different.categories)
 cohen.kappa(code.same.categories)
 cohen.kappa(data.different.categories)
 cohen.kappa(data.same.categories)
 ```
+
+Let's see what happens if we use the caret package confusion matrix to calculate these numbers (plus percent agreement): ...ah, crap, Sara F. has the "maybe" category and I don't, so I think the code will fall down on that.
+
+```{r}
+
+```
+
+# The 5-annotator study of a stratified sample of natural language processing papers
+
+```{r data.stratified.sample}
+all.annotators.data <- read.table("/Users/kev/Documents/InterRaterAgreementReproducibility/ReproducibilityJudgmentsConvertedToBinaryZeroOrOneWithTotalPositivesAndNumberOfAnnotations.csv",
+                               header=T, sep=",")
+
+```
+
+# what happens with missing values??
+#```{r calculate.kappa.stratified.sample}
+```{r}
+# need a function to calculate confusion matrix between two annotators where the number of papers annotated is different
+#my.table <- as.table(rbind(c(0, 1, 1), c(1, 1, 1)))
+#confusionMatrix(my.table)
+
+annotators <- c("ann_kev", "ann_jin", "ann_aur", "ann_pra", "ann_neg")
+#pairs.of.annotators <- pairs(annotators)
+pairs.of.annotators <- combn(annotators, 2)
+for(i in 1:ncol(pairs.of.annotators)) {
+  #print(all.annotators.data$pairs.of.annotators[1,i])
+  #print(all.annotators.data$pairs.of.annotators[2,i])
+  annotator.1 <- pairs.of.annotators[1,i]
+  annotator.2 <- pairs.of.annotators[2,i]
+  #print(all.annotators.data$ann_kev)
+  print(annotator.1)
+  #print(all.annotators.data[,annotator.1])
+  print(annotator.2)
+  #print(all.annotators.data[,annotator.2])
+  my.confusion.matrix <- confusionMatrix(all.annotators.data[,annotator.1], all.annotators.data[,annotator.2])
+  #print(summary(my.confusion.matrix))
+  print(my.confusion.matrix)
+}
+
+# No NAs: works fine
+#library(caret)
+#junk.1 <- c(0, 1, 1)
+#junk.2 <- c(1, 0, 1)
+#confusionMatrix(junk.1, junk.2)
+```
+
+```{r}
+# now let's trim these down to only the papers for which the two 
+# annotators both have an annotation.
+only.papers.annotated.by.both <- function(annotator.1, annotator.2) {
+  # validate your input a bit--both vectors should be the same length
+  if (length(annotator.1) != length(annotator.2)) {
+    print("XXXX Annotation vector lengths different... XXXX")
+  }
+  
+  # OK, the data's somewhat validated, so go through both vectors
+  # and keep only the papers that were annotated by both of them.
+  # Note that you have to consider the possibility where the annotated
+  # papers are not continuous, so you can't just stop as soon as you
+  # hit an NA.
+  
+  # initialize a couple things you'll need
+  annotator.1.filtered <- c()
+  annotator.2.filtered <- c()
+  
+  for(i in 1:length(annotator.1)) {
+    if (is.na(annotator.1[i]) | is.na(annotator.2[i])) {
+      #print("Beurk...")
+      # ...and do nothing else
+    } else {
+      #print("Youpie")
+      annotator.1.filtered <- c(annotator.1.filtered, annotator.1[i])
+      annotator.2.filtered <- c(annotator.2.filtered, annotator.2[i])
+    }
+  } # close for-loop through input vectors
+  #return(annotator.1, annotator.2)
+  return.value <- as.data.frame(cbind(annotator.1.filtered, annotator.2.filtered))
+  return(return.value)
+}
+
+```
+
+Now we'll take out the missing values.
+
+```{r}
+# need a function to calculate confusion matrix between two annotators where the number of papers annotated is different
+#my.table <- as.table(rbind(c(0, 1, 1), c(1, 1, 1)))
+#confusionMatrix(my.table)
+
+annotators <- c("ann_kev", "ann_jin", "ann_aur", "ann_pra", "ann_neg")
+#pairs.of.annotators <- pairs(annotators)
+pairs.of.annotators <- combn(annotators, 2)
+
+pairwise.kappas <- c()
+pairwise.accuracies <- c()
+
+for(i in 1:ncol(pairs.of.annotators)) {
+  #print(all.annotators.data$pairs.of.annotators[1,i])
+  #print(all.annotators.data$pairs.of.annotators[2,i])
+  annotator.1 <- pairs.of.annotators[1,i]
+  annotator.2 <- pairs.of.annotators[2,i]
+  #print(all.annotators.data$ann_kev)
+  print(annotator.1)
+  #print(all.annotators.data[,annotator.1])
+  print(annotator.2)
+  #print(all.annotators.data[,annotator.2])
+  
+  #all.annotators.data[,annotator.1] <- only.papers.annotated.by.both(all.annotators.data[,annotator.1], .annotators.data[,annotator.2])
+  
+  #summary(only.papers.annotated.by.both)
+  #my.confusion.matrix <- confusionMatrix(all.annotators.data[,1], all.annotators.data[,2])
+  
+  just.papers.annotated.by.both <- only.papers.annotated.by.both(all.annotators.data[,annotator.1], all.annotators.data[,annotator.2])
+  
+  my.confusion.matrix <- confusionMatrix(just.papers.annotated.by.both[,1], just.papers.annotated.by.both[,2])
+  print(my.confusion.matrix)
+  
+  #print(attributes(my.confusion.matrix))
+  
+  
+  pairwise.kappas <- c(pairwise.kappas, my.confusion.matrix$overall["Kappa"])
+  #print("Kappa: ")
+  #print(my.kappa)
+  pairwise.accuracies <- c(pairwise.accuracies, my.confusion.matrix$overall["Accuracy"])
+  #print("Accuracy: ")
+  #print(my.accuracy)
+}
+
+# No NAs: works fine
+#library(caret)
+#junk.1 <- c(0, 1, 1)
+#junk.2 <- c(1, 0, 1)
+#confusionMatrix(junk.1, junk.2)
+```
+
+Now let's plot kappa and accuracies, just so that we can get a sense of how much variability there is in them.  Accuracy is percent agreement, in some terminologies.
+
+```{r}
+
+mean.kappa <- mean(pairwise.kappas)
+mean.kappa <- round(mean.kappa, digits=2)
+standard.deviation.kappa <- sd(pairwise.kappas)
+standard.deviation.kappa <- round(standard.deviation.kappa, digits=2)
+mean.accuracy <- mean(pairwise.accuracies)
+mean.accuracy <- round(mean.accuracy, digits=2)
+standard.deviation.accuracy <- sd(pairwise.accuracies)
+standard.deviation.accuracy <- round(standard.deviation.accuracy, digits=2)
+#table.main.title <- paste("Kappa and percent agreement for all pairs of annotators\n Kappa mean ", mean.kappa, "standard deviation ", standard.deviation.kappa, "Percent agreement mean ", mean.accuracy, "standard deviation ", standard.deviation.accuracy)
+table.main.title <- paste("Kappa and percent agreement for all pairs of annotators")
+plot(pairwise.accuracies, pairwise.kappas,
+     main=table.main.title,
+     xlim=c(0, 1.0),
+     xlab="Percent agreement",
+     ylim=c(0, 1.0),
+     ylab="Kappa"
+     )
+
+print("Pairwise kappa mean:")
+print(mean.kappa)
+print("Pairwise kappa standard deviation:")
+print(standard.deviation.kappa)
+
+print("Pairwise kappas:")
+sorted.pairwise.kappas <- sort(pairwise.kappas)
+print(sorted.pairwise.kappas)
+
+print("Pairwise percent agreement mean:")
+print(mean.accuracy)
+print("Pairwise percent agreement standard deviation:")
+print(standard.deviation.accuracy)
+print("Pairwise percent agreement:")
+sorted.pairwise.accuracies <- sort(pairwise.accuracies)
+print(sorted.pairwise.accuracies)
+
+```
+
+
+Document session for reproducibility purposes.
+```{r}
+sessionInfo()
+```
+
 
